@@ -8,7 +8,6 @@ import lombok.Data;
 @Data
 public class InvoiceData {
 
-    private String number;
     private String currency;
     private LocalDate dueDate;
     private List<InvoiceEntry> entries;

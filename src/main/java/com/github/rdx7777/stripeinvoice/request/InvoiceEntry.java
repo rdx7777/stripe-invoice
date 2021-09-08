@@ -8,9 +8,7 @@ import lombok.Data;
 public class InvoiceEntry {
 
     private String description;
-    private Long quantity;
+    private BigDecimal quantity;
     private BigDecimal price;
-    private BigDecimal netValue;
-    private BigDecimal grossValue;
     private Vat vatRate;
 }

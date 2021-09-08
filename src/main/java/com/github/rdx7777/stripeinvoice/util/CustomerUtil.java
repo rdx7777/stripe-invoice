@@ -10,9 +10,13 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.CustomerCollection;
 import com.stripe.param.CustomerCreateParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 public class CustomerUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomerUtil.class);
 
     @Value("${STRIPE_PUBLIC_KEY}")
     private static String stripePublicKey;
@@ -21,6 +25,7 @@ public class CustomerUtil {
 
         List<String> resultOfValidation = Validator.validateCustomerData(data);
         if (!resultOfValidation.isEmpty()) {
+            logger.error(String.format("Attempt to create a customer with following invalid fields: %n%s", resultOfValidation));
             throw new ServiceOperationException(String.format("Attempt to create customer with following invalid fields: %n%s", resultOfValidation));
         }
 
@@ -46,16 +51,19 @@ public class CustomerUtil {
                 .build())
             .build();
 
-        return Customer.create(params);
+        Customer customer = Customer.create(params);
+        logger.info(String.format("Customer created, id: %s", customer.getId()));
+        return customer;
     }
 
     public static CustomerCollection getAllCustomers() throws StripeException {
 
-        Stripe.apiKey = "sk_test_4eC39HqLyjWDarjtT1zdp7dc";
+        Stripe.apiKey = stripePublicKey;
 
         Map<String, Object> params = new HashMap<>();
         params.put("limit", 100);
 
+        logger.info("Attempt to get all customers.");
         return Customer.list(params);
     }
 }
