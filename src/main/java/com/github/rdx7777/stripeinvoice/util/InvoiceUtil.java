@@ -1,7 +1,7 @@
 package com.github.rdx7777.stripeinvoice.util;
 
 import java.math.BigDecimal;
-import java.time.temporal.ChronoField;
+import java.time.ZoneId;
 import java.util.List;
 
 import com.github.rdx7777.stripeinvoice.request.InvoiceData;
@@ -14,14 +14,10 @@ import com.stripe.param.InvoiceCreateParams;
 import com.stripe.param.InvoiceItemCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 
 public class InvoiceUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(InvoiceUtil.class);
-
-    @Value("${STRIPE_PUBLIC_KEY}")
-    private static String stripePublicKey;
 
     /**
      * Creates a new {@link Invoice Stripe's invoice} on the basis of passed {@link InvoiceData} object.
@@ -44,7 +40,7 @@ public class InvoiceUtil {
             throw new ServiceOperationException(String.format("Attempt to create invoice with following invalid fields: %n%s", resultOfValidation));
         }
 
-        Stripe.apiKey = stripePublicKey;
+        Stripe.apiKey = System.getenv("STRIPE_PUBLIC_KEY");
 
         for (InvoiceEntry entry : data.getEntries()) {
             BigDecimal netAmount = entry.getPrice().multiply(entry.getQuantity());
@@ -53,7 +49,6 @@ public class InvoiceUtil {
             InvoiceItemCreateParams invoiceItemParams = InvoiceItemCreateParams.builder()
                 .setCustomer(customerId)
                 .setDescription(entry.getDescription())
-                .setQuantity(entry.getQuantity().longValue())
                 .setAmount(grossAmount.longValue())
                 .setCurrency(data.getCurrency())
                 .build();
@@ -62,7 +57,8 @@ public class InvoiceUtil {
 
         InvoiceCreateParams invoiceParams = InvoiceCreateParams.builder()
             .setCustomer(customerId)
-            .setDueDate(data.getDueDate().getLong(ChronoField.EPOCH_DAY))
+            .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE)
+            .setDueDate(data.getDueDate().atStartOfDay(ZoneId.systemDefault()).toEpochSecond())
             .setAutoAdvance(false)
             .build();
 
@@ -84,7 +80,7 @@ public class InvoiceUtil {
             logger.error("Attempt to get an invoice with null id.");
             throw new ServiceOperationException("Invoice id cannot be null.");
         }
-        Stripe.apiKey = stripePublicKey;
+        Stripe.apiKey = System.getenv("STRIPE_PUBLIC_KEY");
         Invoice invoice = Invoice.retrieve(id);
         logger.info(String.format("Invoice retrieved, id: %s", invoice.getId()));
         return invoice;

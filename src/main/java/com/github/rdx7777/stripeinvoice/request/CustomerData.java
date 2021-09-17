@@ -1,8 +1,10 @@
 package com.github.rdx7777.stripeinvoice.request;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class CustomerData {
 
     private String name;

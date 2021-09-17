@@ -12,14 +12,10 @@ import com.stripe.model.CustomerCollection;
 import com.stripe.param.CustomerCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 
 public class CustomerUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomerUtil.class);
-
-    @Value("${STRIPE_PUBLIC_KEY}")
-    private static String stripePublicKey;
 
     public static Customer createCustomer(CustomerData data) throws ServiceOperationException, StripeException {
 
@@ -29,7 +25,7 @@ public class CustomerUtil {
             throw new ServiceOperationException(String.format("Attempt to create customer with following invalid fields: %n%s", resultOfValidation));
         }
 
-        Stripe.apiKey = stripePublicKey;
+        Stripe.apiKey = System.getenv("STRIPE_PUBLIC_KEY");
 
         String streetAndHouseNumber = data.getStreet() + " " + data.getHouseNumber();
         String apartmentNumber = "";
@@ -58,7 +54,7 @@ public class CustomerUtil {
 
     public static CustomerCollection getAllCustomers() throws StripeException {
 
-        Stripe.apiKey = stripePublicKey;
+        Stripe.apiKey = System.getenv("STRIPE_PUBLIC_KEY");
 
         Map<String, Object> params = new HashMap<>();
         params.put("limit", 100);
